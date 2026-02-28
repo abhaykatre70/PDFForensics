@@ -157,9 +157,19 @@
                 document.dispatchEvent(event);
             });
 
+            globalSearch.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const query = e.target.value.trim();
+                    if (query) {
+                        // Redirect to history with search query
+                        window.location.href = `{{ url_for('ui.history') }}?search=${encodeURIComponent(query)}`;
+                    }
+                }
+            });
+
             // Shortcut to focus search
             document.addEventListener('keydown', (e) => {
-                if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+                if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                     e.preventDefault();
                     globalSearch.focus();
                 }

@@ -99,11 +99,13 @@
     {% if pagination.pages > 1 %}
     <div class="pagination">
         {% if pagination.has_prev %}
-        <a href="?page={{ pagination.prev_num }}" class="page-btn">← Prev</a>
+        <a href="?page={{ pagination.prev_num }}{% if search_query %}&search={{ search_query }}{% endif %}"
+            class="page-btn">← Prev</a>
         {% endif %}
         <span class="page-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
         {% if pagination.has_next %}
-        <a href="?page={{ pagination.next_num }}" class="page-btn">Next →</a>
+        <a href="?page={{ pagination.next_num }}{% if search_query %}&search={{ search_query }}{% endif %}"
+            class="page-btn">Next →</a>
         {% endif %}
     </div>
     {% endif %}
@@ -125,7 +127,13 @@
             el.style.width = el.getAttribute('data-width') + '%';
         });
 
-        // Handle Search
+        // Initialize search from URL if present
+        const globalSearch = document.getElementById('global-search');
+        if (globalSearch && "{{ search_query }}") {
+            globalSearch.value = "{{ search_query }}";
+        }
+
+        // Handle Search (Local filtering for current page)
         document.addEventListener('app:search', (e) => {
             const query = e.detail.query;
             const rows = document.querySelectorAll('.history-row');
