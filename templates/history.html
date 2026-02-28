@@ -3,9 +3,21 @@
 
 {% block content %}
 <div class="page-container">
-    <div class="page-header">
-        <h1>Analysis History</h1>
-        <p>Showing {{ pagination.total }} total analyses</p>
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1>Analysis History</h1>
+            <p>Showing {{ pagination.total }} total analyses</p>
+        </div>
+        {% if pagination.total > 0 %}
+        <button onclick="clearHistory()" class="btn btn--outline"
+            style="border-color: var(--cls-danger); color: var(--cls-danger);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                    d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+            </svg>
+            Clear All
+        </button>
+        {% endif %}
     </div>
 
     {% if pagination.items %}
@@ -124,5 +136,27 @@
             });
         });
     });
+
+    async function clearHistory() {
+        if (!confirm("Are you sure you want to clear all analysis history? This action cannot be undone.")) {
+            return;
+        }
+
+        try {
+            const response = await fetch("{{ url_for('api.clear_history') }}", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                const result = await response.json();
+                alert("Error: " + (result.error || "Failed to clear history"));
+            }
+        } catch (err) {
+            alert("Network error: " + err.message);
+        }
+    }
 </script>
 {% endblock %}

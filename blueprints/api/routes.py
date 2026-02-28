@@ -319,3 +319,24 @@ def history():
         "pages": pagination.pages,
         "limit": limit,
     }), 200
+
+
+@api_bp.route("/history", methods=["DELETE"])
+def clear_history():
+    """DELETE /api/v1/history — delete all analyses and report files."""
+    try:
+        analyses = Analysis.query.all()
+        for analysis in analyses:
+            if analysis.report_path and os.path.exists(analysis.report_path):
+                try:
+                    os.remove(analysis.report_path)
+                except Exception:
+                    pass
+            db.session.delete(analysis)
+        
+        db.session.commit()
+        return jsonify({"message": "History cleared successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Failed to clear history: %s", e)
+        return jsonify({"error": "Failed to clear history", "detail": str(e)}), 500
