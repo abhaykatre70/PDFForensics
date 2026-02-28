@@ -62,8 +62,11 @@ def create_app(env: str = None) -> Flask:
 
     # ── DB init ───────────────────────────────────────────────────────────────
     with app.app_context():
-        db.create_all()
-        logger.info("Database tables created / verified.")
+        try:
+            db.create_all()
+            logger.info("Database tables created / verified.")
+        except Exception as e:
+            logger.error("Failed to initialize database: %s", e)
 
     logger.info("PDF Forensics app created [env=%s]", env)
     return app

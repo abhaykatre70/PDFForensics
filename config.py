@@ -43,10 +43,12 @@ class BaseConfig:
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL",
-        f"sqlite:///{os.path.join(os.path.dirname(__file__), 'data', 'dev.db')}"
-    )
+    if os.environ.get("VERCEL") == "1":
+        _db_path = os.path.join('/tmp', 'dev.db')
+    else:
+        _db_path = os.path.join(os.path.dirname(__file__), 'data', 'dev.db')
+    
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{_db_path}")
 
 
 class ProductionConfig(BaseConfig):
