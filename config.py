@@ -12,8 +12,14 @@ class BaseConfig:
     MAX_CONTENT_LENGTH = MAX_UPLOAD_MB * 1024 * 1024  # bytes
 
     UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", os.path.join("/tmp", "pdf_uploads"))
-    REPORT_FOLDER = os.environ.get("REPORT_FOLDER", os.path.join(os.path.dirname(__file__), "data", "reports"))
-    DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(os.path.dirname(__file__), 'data', 'app.db')}")
+    
+    if os.environ.get("VERCEL") == "1":
+        REPORT_FOLDER = os.environ.get("REPORT_FOLDER", os.path.join("/tmp", "reports"))
+        DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join('/tmp', 'app.db')}")
+    else:
+        REPORT_FOLDER = os.environ.get("REPORT_FOLDER", os.path.join(os.path.dirname(__file__), "data", "reports"))
+        DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{os.path.join(os.path.dirname(__file__), 'data', 'app.db')}")
+
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

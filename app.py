@@ -5,11 +5,9 @@ import os
 import logging
 from flask import Flask
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
 from config import config_map
-from extensions import db
+from extensions import db, limiter
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 try:
@@ -24,9 +22,6 @@ except ImportError:
                         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 logger = logging.getLogger(__name__)
-
-# Global limiter (initialised in create_app)
-limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
 
 def sort_findings_by_severity(findings):
@@ -46,10 +41,13 @@ def create_app(env: str = None) -> Flask:
     app.jinja_env.filters['sort_by_severity'] = sort_findings_by_severity
 
     # ── Ensure directories exist ───────────────────────────────────────────────
-    for folder in [app.config["UPLOAD_FOLDER"], app.config["REPORT_FOLDER"]]:
-        os.makedirs(folder, exist_ok=True)
-    data_dir = os.path.join(os.path.dirname(__file__), "data")
-    os.makedirs(data_dir, exist_ok=True)
+    try:
+        for folder in [app.config["UPLOAD_FOLDER"], app.config["REPORT_FOLDER"]]:
+            os.makedirs(folder, exist_ok=True)
+        data_dir = os.path.join(os.path.dirname(__file__), "data")
+        os.makedirs(data_dir, exist_ok=True)
+    except OSError:
+        pass
 
     # ── Extensions ────────────────────────────────────────────────────────────
     db.init_app(app)
@@ -71,6 +69,7 @@ def create_app(env: str = None) -> Flask:
     return app
 
 
+app = create_app()
+
 if __name__ == "__main__":
-    application = create_app()
-    application.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

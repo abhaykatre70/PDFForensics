@@ -27,11 +27,10 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from blueprints.api import api_bp
-from extensions import db
+from extensions import db, limiter
 from models.analysis import Analysis
 from models.finding import Finding
 from analyzer import PDFAnalyzer, compute_sha256, compute_md5
-from app import limiter
 
 logger = logging.getLogger(__name__)
 
