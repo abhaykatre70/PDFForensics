@@ -30,8 +30,9 @@ A **Python/Flask** web application that programmatically analyzes uploaded PDF f
 ### Option 1 — Local Python (Development)
 
 ```bash
-# 1. Clone and enter the directory
-cd CFI-TAE1
+# 1. Clone the repository and enter the directory
+git clone https://github.com/abhaykatre70/PDFForensics.git
+cd PDFForensics
 
 # 2. Create virtual environment
 python -m venv .venv
@@ -96,7 +97,6 @@ curl http://localhost:5000/api/v1/report/A3F8B21C
 curl http://localhost:5000/api/v1/report/A3F8B21C/html
 ```
 
-Full API docs at `GET /api/v1/docs`.
 
 ---
 
@@ -130,7 +130,7 @@ Test coverage targets ≥ 80% as per the PRD.
 ## 📁 Project Structure
 
 ```
-CFI-TAE1/
+PDFForensics/
 ├── app.py                  # Application factory (create_app)
 ├── config.py               # Dev/Prod/Test config classes
 ├── extensions.py           # Shared Flask extensions
@@ -157,8 +157,7 @@ CFI-TAE1/
 │   ├── index.html          # Upload UI with drag-and-drop
 │   ├── result.html         # Analysis dashboard
 │   ├── history.html        # Analysis history
-│   ├── report.html         # Printable report
-│   └── api_docs.html       # API reference
+│   └── report.html         # Printable report
 ├── static/
 │   ├── css/main.css        # Premium dark design system
 │   └── js/upload.js        # Upload form logic
