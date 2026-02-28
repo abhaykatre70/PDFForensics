@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}Analysis {{ report.analysis_id }} — PDF Forensics{% endblock %}
+{% block description %}Forensic analysis result for {{ report.filename }} — Trust Score: {{ report.trust_score }}/100{%
+endblock %}
+
+{% block content %}
+<div class="result-page">
+
+    <!-- Header -->
+    <div class="result-header">
+        <div class="result-header-left">
+            <a href="{{ url_for('ui.index') }}" class="back-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+                New Analysis
+            </a>
+            <h1 class="result-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                {{ report.filename }}
+            </h1>
+            <p class="result-meta">
+                Analysis ID: <code>{{ report.analysis_id }}</code> &nbsp;·&nbsp;
+                {% if report.analyzed_at %}{{ report.analyzed_at[:19]|replace('T',' ') }} UTC{% endif %}
+            </p>
+        </div>
+        <div class="result-actions">
+            <a href="{{ url_for('api.get_report_html', analysis_id=report.analysis_id) }}" class="btn btn--outline"
+                target="_blank">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                </svg>
+                Printable Report
+            </a>
+            <a href="{{ url_for('api.get_report', analysis_id=report.analysis_id) }}" class="btn btn--outline"
+                target="_blank">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                JSON Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Score + Summary Grid -->
+    <div class="result-summary-grid">
+
+        <!-- Trust Score Gauge -->
+        <div class="score-card score-card--{{ color_class }}">
+            <div class="score-label">Trust Score</div>
+            <div class="score-gauge">
+                <svg class="gauge-svg" viewBox="0 0 200 120" width="200" height="120">
+                    <defs>
+                        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#ef4444" />
+                            <stop offset="40%" stop-color="#f59e0b" />
+                            <stop offset="70%" stop-color="#10b981" />
+                            <stop offset="100%" stop-color="#06b6d4" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Track -->
+                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1e293b" stroke-width="16"
+                        stroke-linecap="round" />
+                    <!-- Fill -->
+                    <path id="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)"
+                        stroke-width="16" stroke-linecap="round" stroke-dasharray="251.2"
+                        stroke-dashoffset="{{ 251.2 - (report.trust_score / 100 * 251.2) }}" />
+                    <!-- Needle dot -->
+                    <circle id="gauge-dot" cx="100" cy="100" r="8" fill="white" opacity="0.9" />
+                </svg>
+                <div class="score-number">{{ report.trust_score }}</div>
+                <div class="score-max">/100</div>
+            </div>
+            <div class="score-classification badge badge--{{ color_class }}">
+                {{ report.classification }}
+            </div>
+            <div class="score-file-info">
+                <div class="fi-row"><span>File</span><span>{{ report.filename }}</span></div>
+                {% if report.filesize %}<div class="fi-row"><span>Size</span><span>{{ "%.1f"|format(report.filesize /
+                        1024) }} KB</span></div>{% endif %}
+                {% if report.sha256 %}<div class="fi-row"><span>SHA-256</span><span class="mono-sm">{{
+                        report.sha256[:16] }}…</span></div>{% endif %}
+            </div>
+        </div>
+
+        <!-- Severity Breakdown -->
+        <div class="severity-card">
+            <h2 class="card-title">Severity Breakdown</h2>
+            <div class="severity-bars">
+                {% set sevs = [
+                ("CRITICAL", "danger", "🔴"),
+                ("HIGH", "warning", "🟠"),
+                ("MEDIUM", "caution", "🟡"),
+                ("LOW", "info", "🔵"),
+                ("INFO", "neutral", "⚪"),
+                ] %}
+                {% for sev, cls, icon in sevs %}
+                {% set count = report.severity_counts.get(sev, 0) %}
+                <div class="sev-row">
+                    <span class="sev-icon">{{ icon }}</span>
+                    <span class="sev-label">{{ sev }}</span>
+                    <div class="sev-bar-wrap">
+                        <div class="sev-bar sev-bar--{{ cls }}" data-width="{{ [count * 12, 100] | min }}"></div>
+                    </div>
+                    <span class="sev-count {% if count > 0 %}sev-count--{{ cls }}{% endif %}">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="total-findings">
+                <strong>{{ report.findings | length }}</strong> total findings
+            </div>
+        </div>
+
+        <!-- Action Recommendation -->
+        <div class="action-card action-card--{{ color_class }}">
+            <h2 class="card-title">Recommended Action</h2>
+            {% if color_class == "success" %}
+            <div class="action-icon">✅</div>
+            <p class="action-text">Accept document with standard logging. Score indicates no significant tampering
+                indicators detected.</p>
+            {% elif color_class == "warning" %}
+            <div class="action-icon">⚠️</div>
+            <p class="action-text">Route to manual review queue. Some anomalies detected that require human judgment
+                before accepting this document.</p>
+            {% elif color_class == "danger-light" %}
+            <div class="action-icon">🚨</div>
+            <p class="action-text">Escalate to senior analyst. Significant indicators of potential tampering or
+                manipulation detected.</p>
+            {% else %}
+            <div class="action-icon">🛑</div>
+            <p class="action-text">Reject document and initiate incident response. Multiple critical indicators of
+                document compromise detected.</p>
+            {% endif %}
+            <div class="disclaimer">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                Decision-support only. Not a legally binding certification.
+            </div>
+        </div>
+    </div>
+
+    <!-- Findings Accordion -->
+    {% if report.findings %}
+    <div class="findings-section">
+        <h2 class="section-heading">
+            Forensic Findings
+            <span class="findings-count">{{ report.findings | length }}</span>
+        </h2>
+        <div class="findings-list" id="findings-list">
+            {% for finding in report.findings | sort_by_severity %}
+            <div class="finding-card finding-card--{{ finding.severity | lower }}" data-sev="{{ finding.severity }}">
+                <div class="finding-header" onclick="toggleFinding(this)">
+                    <div class="finding-left">
+                        <span class="sev-badge sev-badge--{{ finding.severity | lower }}">{{ finding.severity }}</span>
+                        <span class="finding-module">{{ finding.module }}</span>
+                        <span class="finding-title">{{ finding.title }}</span>
+                    </div>
+                    <svg class="finding-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </div>
+                <div class="finding-body">
+                    <p class="finding-detail">{{ finding.detail }}</p>
+                    {% if finding.evidence %}
+                    <div class="finding-evidence">
+                        <span class="evidence-label">Evidence</span>
+                        <pre class="evidence-pre">{{ finding.evidence }}</pre>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="no-findings">
+        <div class="no-findings-icon">✅</div>
+        <h3>No Findings Detected</h3>
+        <p>All forensic modules completed without raising any suspicious indicators.</p>
+    </div>
+    {% endif %}
+
+    <!-- Module Detail Accordions -->
+    <div class="modules-detail-section">
+        <h2 class="section-heading">Module Details</h2>
+        {% set module_list = [
+        ("metadata", "Metadata Inspector", "🔍"),
+        ("signatures", "Signature Verifier", "🛡️"),
+        ("structure", "Structure Analyzer", "📊"),
+        ("content", "Content Stream Parser", "📝"),
+        ("visual", "Visual Forensics Engine", "🖼️"),
+        ] %}
+        {% for key, label, icon in module_list %}
+        {% if report.modules.get(key) %}
+        <div class="module-detail-card">
+            <div class="module-detail-header" onclick="toggleModule(this)">
+                <span class="module-detail-icon">{{ icon }}</span>
+                <span class="module-detail-label">{{ label }}</span>
+                <svg class="module-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5">
+                    <polyline points="6 9 12 15 18 9" />
+                </svg>
+            </div>
+            <div class="module-detail-body">
+                <div class="module-detail-grid">
+                    {% for k, v in report.modules[key].items() %}
+                    {% if not k.startswith('_') and v is not none %}
+                    <div class="md-item">
+                        <span class="md-key">{{ k | replace('_', ' ') | title }}</span>
+                        <span class="md-val">
+                            {% if v is mapping %}
+                            <em class="muted">(object)</em>
+                            {% elif v is iterable and v is not string %}
+                            {{ v | join(', ') or '—' }}
+                            {% else %}
+                            {{ v if v != '' else '—' }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleFinding(header) {
+        const card = header.closest('.finding-card');
+        card.classList.toggle('open');
+    }
+    function toggleModule(header) {
+        const card = header.closest('.module-detail-card');
+        card.classList.toggle('open');
+    }
+    // Animate score gauge
+    document.addEventListener('DOMContentLoaded', () => {
+        const fill = document.getElementById('gauge-fill');
+        const dot = document.getElementById('gauge-dot');
+        if (!fill) return;
+        const scoreElem = document.querySelector('.score-number');
+        const score = scoreElem ? parseInt(scoreElem.textContent, 10) : 0;
+        const total = 251.2;
+        const target = total - (score / 100 * total);
+        fill.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(0.25,0.46,0.45,0.94)';
+        fill.style.strokeDashoffset = target;
+        // Move needle dot along arc
+        const angle = -180 + (score / 100) * 180;
+        const rad = (angle * Math.PI) / 180;
+        const cx = 100 + 80 * Math.cos(rad);
+        const cy = 100 + 80 * Math.sin(rad);
+        setTimeout(() => {
+            if (dot) { dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); }
+        }, 100);
+
+        // Apply widths for severity bars
+        document.querySelectorAll('.sev-bar[data-width]').forEach(el => {
+            el.style.width = el.getAttribute('data-width') + '%';
+        });
+    });
+</script>
+{% endblock %}

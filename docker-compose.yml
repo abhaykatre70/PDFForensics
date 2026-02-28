@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    image: pdf-forensics:latest
+    container_name: pdf_forensics_web
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: production
+      SECRET_KEY: ${SECRET_KEY:-changeme_generate_a_real_secret}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-100}
+      UPLOAD_FOLDER: /tmp/pdf_uploads
+      REPORT_FOLDER: /data/reports
+      DATABASE_URL: sqlite:////data/app.db
+      REPORT_RETENTION_DAYS: ${REPORT_RETENTION_DAYS:-30}
+      ENCRYPT_REPORTS: ${ENCRYPT_REPORTS:-false}
+      RATE_LIMIT: ${RATE_LIMIT:-60 per minute}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-4}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-120}
+    volumes:
+      - pdf_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/api/v1/health')\"" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  pdf_data:
+    driver: local

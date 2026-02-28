@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}History — PDF Forensics{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Analysis History</h1>
+        <p>Showing {{ pagination.total }} total analyses</p>
+    </div>
+
+    {% if pagination.items %}
+    <div class="history-table-wrap">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Filename</th>
+                    <th>Trust Score</th>
+                    <th>Classification</th>
+                    <th>Analyzed At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for analysis in pagination.items %}
+                {% set color = get_classification_color(analysis.classification) %}
+                <tr class="history-row">
+                    <td><code class="analysis-id">{{ analysis.id }}</code></td>
+                    <td class="filename-cell">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        {{ analysis.filename or '—' }}
+                    </td>
+                    <td>
+                        <div class="history-score-wrap">
+                            <div class="history-score-bar">
+                                <div class="history-score-fill history-score-fill--{{ color }}"
+                                    data-width="{{ analysis.trust_score }}"></div>
+                            </div>
+                            <span class="history-score-num">{{ analysis.trust_score }}</span>
+                        </div>
+                    </td>
+                    <td><span class="badge badge--{{ color }}">{{ analysis.classification }}</span></td>
+                    <td class="date-cell">
+                        {% if analysis.analyzed_at %}
+                        {{ analysis.analyzed_at.strftime('%Y-%m-%d %H:%M') }} UTC
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('ui.result', analysis_id=analysis.id) }}" class="action-link"
+                            title="View Dashboard">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </a>
+                        <a href="{{ url_for('api.get_report_html', analysis_id=analysis.id) }}" class="action-link"
+                            title="Printable Report" target="_blank">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="6 9 6 2 18 2 18 9" />
+                                <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                                <rect x="6" y="14" width="12" height="8" />
+                            </svg>
+                        </a>
+                        <a href="{{ url_for('api.get_report', analysis_id=analysis.id) }}" class="action-link"
+                            title="JSON Report" target="_blank">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+        <a href="?page={{ pagination.prev_num }}" class="page-btn">← Prev</a>
+        {% endif %}
+        <span class="page-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+        <a href="?page={{ pagination.next_num }}" class="page-btn">Next →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📂</div>
+        <h3>No analyses yet</h3>
+        <p>Upload your first PDF to get started.</p>
+        <a href="{{ url_for('ui.index') }}" class="btn btn--primary">Analyze a PDF</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.history-score-fill[data-width]').forEach(el => {
+            el.style.width = el.getAttribute('data-width') + '%';
+        });
+    });
+</script>
+{% endblock %}

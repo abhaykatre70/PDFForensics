@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report - A PDF Document Authenticity and Tampering Detection Tool — PDF Forensics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .report-page {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px 80px;
+        }
+
+        .report-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #1e293b;
+        }
+
+        .report-top {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 24px;
+            align-items: start;
+            margin-bottom: 32px;
+        }
+
+        .report-file-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 4px;
+        }
+
+        .report-meta-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .report-meta-list span {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .report-score-big {
+            text-align: center;
+            padding: 20px 32px;
+            background: #0f172a;
+            border-radius: 16px;
+            border: 1px solid #1e293b;
+        }
+
+        .rsb-num {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .rsb-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .rsb-class {
+            margin-top: 8px;
+        }
+
+        .report-section {
+            margin-bottom: 40px;
+        }
+
+        .report-section h2 {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .report-findings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .report-findings-table th {
+            background: #0f172a;
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+        }
+
+        .report-findings-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #1e293b;
+            font-size: 0.875rem;
+            vertical-align: top;
+        }
+
+        .report-findings-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rf-module {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .rf-title {
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .rf-detail {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .rf-evidence {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 4px;
+            background: #0f172a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+
+        .print-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .severity-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .sscard {
+            text-align: center;
+            padding: 16px 8px;
+            background: #0f172a;
+            border-radius: 12px;
+            border: 1px solid #1e293b;
+        }
+
+        .sscard-num {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .sscard-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="report-page">
+
+        <!-- Brand header -->
+        <div class="report-brand">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <rect width="28" height="28" rx="6" fill="url(#rg)" />
+                <path d="M8 6h8l6 6v14H8V6z" fill="none" stroke="#fff" stroke-width="1.5" />
+                <path d="M16 6v6h6" fill="none" stroke="#fff" stroke-width="1.5" />
+                <defs>
+                    <linearGradient id="rg" x1="0" y1="0" x2="28" y2="28">
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="100%" stop-color="#8b5cf6" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <strong style="font-size:1.1rem;">PDF Forensics — Auditable Evidence Report</strong>
+            <span style="margin-left:auto;font-size:0.75rem;color:#64748b;">Generated {{
+                report.analyzed_at[:19]|replace('T',' ') if report.analyzed_at else 'N/A' }} UTC</span>
+        </div>
+
+        <!-- File + Score -->
+        <div class="report-top">
+            <div>
+                <div class="report-file-title">{{ report.filename }}</div>
+                <div class="report-meta-list">
+                    <span>Analysis ID: {{ report.analysis_id }}</span>
+                    <span>SHA-256: {{ report.file_info.sha256 if report.file_info else report.sha256 }}</span>
+                    {% if report.file_info %}<span>Size: {{ "%.1f"|format(report.file_info.size_bytes / 1024) }}
+                        KB</span>{% endif %}
+                </div>
+            </div>
+            <div class="report-score-big">
+                <div
+                    class="rsb-num {% if report.trust_score >= 80 %}text-success{% elif report.trust_score >= 60 %}text-warning{% elif report.trust_score >= 35 %}text-danger-light{% else %}text-danger{% endif %}">
+                    {{ report.trust_score }}</div>
+                <div class="rsb-label">Trust Score</div>
+                <div class="rsb-class"><span class="badge badge--{{ color_class }}">{{ report.classification }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Severity Summary -->
+        <div class="report-section">
+            <h2>Severity Summary</h2>
+            <div class="severity-summary-grid">
+                {% for sev, cls in
+                [("CRITICAL","danger"),("HIGH","warning"),("MEDIUM","caution"),("LOW","info"),("INFO","neutral")] %}
+                <div class="sscard">
+                    <div
+                        class="sscard-num {% if report.severity_counts.get(sev,0) > 0 %}text-{{ cls }}{% else %}text-muted{% endif %}">
+                        {{ report.severity_counts.get(sev, 0) }}</div>
+                    <div class="sscard-label">{{ sev }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Findings table -->
+        <div class="report-section">
+            <h2>All Findings ({{ report.findings | length }})</h2>
+            {% if report.findings %}
+            <table class="report-findings-table">
+                <thead>
+                    <tr>
+                        <th style="width:90px">Severity</th>
+                        <th style="width:100px">Module</th>
+                        <th>Finding</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in report.findings | sort_by_severity %}
+                    <tr>
+                        <td><span class="sev-badge sev-badge--{{ f.severity | lower }}">{{ f.severity }}</span></td>
+                        <td><span class="rf-module">{{ f.module }}</span></td>
+                        <td>
+                            <div class="header-title">A PDF Document Authenticity and Tampering Detection Tool</div>
+                            <div class="rf-detail">{{ f.detail }}</div>
+                            {% if f.evidence %}<div class="rf-evidence">{{ f.evidence }}</div>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:#64748b">No findings detected.</p>
+            {% endif %}
+        </div>
+
+        <!-- Disclaimer -->
+        <p style="font-size:0.75rem;color:#475569;border-top:1px solid #1e293b;padding-top:16px;margin-top:40px;">
+            ⚠️ This report is for decision-support purposes only. It does not constitute a legally binding certification
+            or authentication of the document's contents. Analysis is based on automated forensic heuristics and may
+            produce false positives or miss novel tampering techniques.
+        </p>
+    </div>
+
+    <button class="print-btn no-print" onclick="window.print()">🖨️ Print / Save PDF</button>
+</body>
+
+</html>

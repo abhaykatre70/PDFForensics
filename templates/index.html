@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}PDF Forensics — Upload & Analyze{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span class="badge-dot"></span>
+            Multi-Layer Forensic Analysis
+        </div>
+        <h1 class="hero-title">
+            Detect PDF Tampering<br>
+            <span class="gradient-text">in Seconds</span>
+        </h1>
+        <p class="hero-subtitle">
+            Upload any PDF document and receive a structured Trust Score backed by 5 forensic
+            analysis modules — metadata, signatures, structure, content, and visual forensics.
+        </p>
+
+        <!-- Upload Card -->
+        <div class="upload-card" id="upload-card">
+            <form id="upload-form" action="{{ url_for('ui.upload') }}" method="POST" enctype="multipart/form-data">
+                <!-- Drop Zone -->
+                <div class="drop-zone" id="drop-zone">
+                    <input type="file" name="file" id="file-input" accept=".pdf,application/pdf" required hidden>
+                    <div class="drop-icon" id="drop-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="12" y1="18" x2="12" y2="12"/>
+                            <polyline points="9 15 12 12 15 15"/>
+                        </svg>
+                    </div>
+                    <div class="drop-text">
+                        <strong>Drop your PDF here</strong>
+                        <span>or <button type="button" class="link-btn" onclick="document.getElementById('file-input').click()">browse files</button></span>
+                    </div>
+                    <p class="drop-hint">PDF files up to 100 MB • Supports password-protected PDFs</p>
+                    <div class="drop-file-info" id="drop-file-info" style="display:none">
+                        <div class="file-icon">📄</div>
+                        <div class="file-details">
+                            <span class="file-name" id="file-name-display"></span>
+                            <span class="file-size" id="file-size-display"></span>
+                        </div>
+                        <button type="button" class="remove-file" id="remove-file" onclick="clearFile()">✕</button>
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div class="upload-options">
+                    <div class="option-group">
+                        <label for="password-field" class="option-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                            Password (optional)
+                        </label>
+                        <input type="password" name="password" id="password-field" placeholder="For encrypted PDFs" class="option-input">
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="analyze-btn" id="analyze-btn" disabled>
+                    <span class="btn-text">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Analyze Document
+                    </span>
+                    <span class="btn-loading" style="display:none">
+                        <span class="spinner"></span>
+                        Analyzing…
+                    </span>
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Modules Overview -->
+<section class="modules-section">
+    <div class="section-container">
+        <h2 class="section-title">5 Forensic Analysis Modules</h2>
+        <p class="section-subtitle">Every upload is inspected across five independent layers</p>
+        <div class="modules-grid">
+            <div class="module-card">
+                <div class="module-icon module-icon--blue">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <h3>Metadata Inspector</h3>
+                <p>Extracts DocInfo and XMP fields, detects manipulation tools, future timestamps, and author anomalies.</p>
+                <div class="module-tags">
+                    <span class="tag tag--critical">Future timestamps</span>
+                    <span class="tag tag--high">Tool signatures</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <div class="module-icon module-icon--purple">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h3>Signature Verifier</h3>
+                <p>Validates digital signature ByteRange coverage, certificate expiry, and detects incremental-save attacks.</p>
+                <div class="module-tags">
+                    <span class="tag tag--critical">ByteRange mismatch</span>
+                    <span class="tag tag--high">Expired certs</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <div class="module-icon module-icon--green">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+                <h3>Structure Analyzer</h3>
+                <p>Scans raw PDF bytes for embedded JavaScript, Launch actions, hidden layers, and hybrid xref tables.</p>
+                <div class="module-tags">
+                    <span class="tag tag--critical">Embedded JS</span>
+                    <span class="tag tag--critical">Launch actions</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <div class="module-icon module-icon--orange">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                </div>
+                <h3>Content Stream Parser</h3>
+                <p>Detects invisible text (Tr=3), complex filter chains, unusual font counts, and form-field injection.</p>
+                <div class="module-tags">
+                    <span class="tag tag--high">Invisible text</span>
+                    <span class="tag tag--medium">Filter chains</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <div class="module-icon module-icon--pink">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </div>
+                <h3>Visual Forensics</h3>
+                <p>Rasterizes pages and applies Error Level Analysis, uniform region detection, and JPEG count analysis.</p>
+                <div class="module-tags">
+                    <span class="tag tag--medium">ELA anomalies</span>
+                    <span class="tag tag--medium">Scan detection</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trust Score Legend -->
+<section class="legend-section">
+    <div class="section-container">
+        <h2 class="section-title">Trust Score Classification</h2>
+        <div class="legend-grid">
+            <div class="legend-card legend-card--success">
+                <div class="legend-range">80–100</div>
+                <div class="legend-label">Likely Authentic</div>
+                <div class="legend-action">Accept with standard logging</div>
+            </div>
+            <div class="legend-card legend-card--warning">
+                <div class="legend-range">60–79</div>
+                <div class="legend-label">Suspicious</div>
+                <div class="legend-action">Route to manual review</div>
+            </div>
+            <div class="legend-card legend-card--danger-light">
+                <div class="legend-range">35–59</div>
+                <div class="legend-label">High Risk</div>
+                <div class="legend-action">Escalate to senior analyst</div>
+            </div>
+            <div class="legend-card legend-card--danger">
+                <div class="legend-range">0–34</div>
+                <div class="legend-label">Compromised</div>
+                <div class="legend-action">Reject; initiate incident response</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}
