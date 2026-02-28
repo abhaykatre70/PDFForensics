@@ -274,6 +274,34 @@ endblock %}
         document.querySelectorAll('.sev-bar[data-width]').forEach(el => {
             el.style.width = el.getAttribute('data-width') + '%';
         });
+
+        // Handle Search
+        document.addEventListener('app:search', (e) => {
+            const query = e.detail.query;
+            const findings = document.querySelectorAll('.finding-card');
+            const modules = document.querySelectorAll('.module-detail-card');
+
+            // Search Findings
+            findings.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                const isMatch = text.includes(query);
+                card.style.display = isMatch ? 'block' : 'none';
+            });
+
+            // Search Modules
+            modules.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                const isMatch = text.includes(query);
+                card.style.display = isMatch ? 'block' : 'none';
+            });
+
+            // Toggle Section Visibilty
+            const findingsSection = document.querySelector('.findings-section');
+            if (findingsSection) {
+                const visibleFindings = findingsSection.querySelectorAll('.finding-card[style="display: block;"]');
+                findingsSection.style.display = visibleFindings.length === 0 && query !== "" ? 'none' : 'block';
+            }
+        });
     });
 </script>
 {% endblock %}

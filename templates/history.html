@@ -112,6 +112,17 @@
         document.querySelectorAll('.history-score-fill[data-width]').forEach(el => {
             el.style.width = el.getAttribute('data-width') + '%';
         });
+
+        // Handle Search
+        document.addEventListener('app:search', (e) => {
+            const query = e.detail.query;
+            const rows = document.querySelectorAll('.history-row');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
     });
 </script>
 {% endblock %}
