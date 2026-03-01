@@ -19,7 +19,7 @@ _EMBEDDED_FILE = b"/EmbeddedFile"
 _URI_ACTION = b"/URI"
 
 
-def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
+def inspect(pdf_path: str, config: dict, password: str = None) -> Dict[str, Any]:
     """
     Run the Structure Analyzer on the given PDF file.
 
@@ -141,7 +141,7 @@ def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
         module_data["encrypted"] = b"/Encrypt" in raw
 
         # ── Deep structure with pikepdf ───────────────────────────────────────
-        _analyze_with_pikepdf(pdf_path, raw, findings, module_data)
+        _analyze_with_pikepdf(pdf_path, raw, findings, module_data, password)
 
     except Exception as exc:
         logger.warning("Structure analysis error: %s", exc, exc_info=True)
@@ -153,11 +153,11 @@ def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
     return {"findings": findings, "module_data": module_data}
 
 
-def _analyze_with_pikepdf(pdf_path: str, raw: bytes, findings: List, module_data: Dict):
+def _analyze_with_pikepdf(pdf_path: str, raw: bytes, findings: List, module_data: Dict, password: str = None):
     """Use pikepdf for deeper structural analysis."""
     try:
         import pikepdf
-        pdf = pikepdf.open(pdf_path, suppress_warnings=True)
+        pdf = pikepdf.open(pdf_path, suppress_warnings=True, password=password or "")
 
         # Check for /AA (Additional Actions) in catalog
         root = pdf.Root

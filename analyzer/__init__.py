@@ -54,7 +54,7 @@ class PDFAnalyzer:
         for module_name, module_fn in modules:
             try:
                 logger.info("Running module: %s for %s", module_name, analysis_id)
-                result = module_fn(pdf_path, self.config)
+                result = module_fn(pdf_path, self.config, password)
                 module_findings = result.get("findings", [])
                 module_data = result.get("module_data", {})
                 all_findings.extend(module_findings)

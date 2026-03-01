@@ -168,6 +168,12 @@ strong {
   padding: 0 24px;
 }
 
+.nav-search {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 24px;
+}
+
 .search-input-wrapper {
   position: relative;
   display: flex;
@@ -246,15 +252,7 @@ strong {
 }
 
 .nav-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 20%;
-  right: 20%;
-  height: 2px;
-  background: var(--indigo);
-  border-radius: 100px;
-  box-shadow: 0 0 10px var(--indigo);
+  display: none;
 }
 
 #theme-toggle svg {
@@ -267,6 +265,12 @@ strong {
 
 [data-theme="dark"] #theme-icon-light {
   transform: rotate(360deg);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .nav-brand strong {

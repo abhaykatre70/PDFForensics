@@ -70,17 +70,18 @@
                                 <circle cx="12" cy="12" r="3" />
                             </svg>
                         </a>
-                        <a href="{{ url_for('api.get_report_html', analysis_id=analysis.id) }}" class="action-link"
-                            title="Printable Report" target="_blank">
+                        <button onclick="printReport(`{{ url_for('api.get_report_html', analysis_id=analysis.id) }}`)"
+                            class="action-link" title="Printable Report"
+                            style="background:none;border:none;cursor:pointer;padding:0;">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <polyline points="6 9 6 2 18 2 18 9" />
                                 <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
                                 <rect x="6" y="14" width="12" height="8" />
                             </svg>
-                        </a>
+                        </button>
                         <a href="{{ url_for('api.get_report', analysis_id=analysis.id) }}" class="action-link"
-                            title="JSON Report" target="_blank">
+                            title="Download JSON Report" download="report-{{ analysis.id }}.json">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -144,6 +145,26 @@
             });
         });
     });
+
+    function printReport(url) {
+        const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const finalUrl = url + (url.includes('?') ? '&' : '?') + 'theme=' + theme;
+
+        let printFrame = document.getElementById('print-frame');
+        if (!printFrame) {
+            printFrame = document.createElement('iframe');
+            printFrame.id = 'print-frame';
+            printFrame.style.display = 'none';
+            document.body.appendChild(printFrame);
+        }
+        printFrame.onload = function () {
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            }, 250);
+        };
+        printFrame.src = finalUrl;
+    }
 
     async function clearHistory() {
         if (!confirm("Are you sure you want to clear all analysis history? This action cannot be undone.")) {

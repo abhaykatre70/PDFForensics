@@ -10,7 +10,7 @@ from typing import List, Dict, Any
 logger = logging.getLogger(__name__)
 
 
-def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
+def inspect(pdf_path: str, config: dict, password: str = None) -> Dict[str, Any]:
     """
     Run the Signature Verifier on the given PDF file.
 
@@ -28,7 +28,7 @@ def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
     }
 
     try:
-        _analyze_signatures(pdf_path, findings, module_data)
+        _analyze_signatures(pdf_path, findings, module_data, password)
         _detect_incremental_save_attack(pdf_path, findings, module_data)
     except Exception as exc:
         logger.warning("Signature inspection error: %s", exc, exc_info=True)
@@ -42,13 +42,13 @@ def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
 
 # ── Internal helpers ────────────────────────────────────────────────────────────
 
-def _analyze_signatures(pdf_path: str, findings: List, module_data: Dict):
+def _analyze_signatures(pdf_path: str, findings: List, module_data: Dict, password: str = None):
     """Traverse AcroForm signature fields and validate each."""
     try:
         import pikepdf
         from datetime import datetime, timezone
 
-        pdf = pikepdf.open(pdf_path, suppress_warnings=True)
+        pdf = pikepdf.open(pdf_path, suppress_warnings=True, password=password or "")
         root = pdf.Root
 
         if "/AcroForm" not in root:
