@@ -650,6 +650,7 @@ strong {
 .file-details {
   flex: 1;
   text-align: left;
+  min-width: 0;
 }
 
 .file-name {
@@ -657,6 +658,8 @@ strong {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-primary);
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .file-size {
