@@ -1,6 +1,6 @@
 # A PDF Document Authenticity and Tampering Detection Tool
 
-**Live Application:** [pdf-forensics-s16b.vercel.app](https://pdf-forensics-s16b.vercel.app/)
+**Live Application:** [pdf-forensics.vercel.app](https://pdf-forensics.vercel.app/)
 
 A **Python/Flask** web application that programmatically analyzes uploaded PDF files across **five forensic modules**, produces a weighted **Trust Score (0–100)**, and generates auditable evidence reports in JSON and HTML formats.
 
