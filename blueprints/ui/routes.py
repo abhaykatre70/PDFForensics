@@ -163,11 +163,23 @@ def result(analysis_id: str):
 @ui_bp.route("/history", methods=["GET"])
 def history():
     page = int(request.args.get("page", 1))
+    search_query = request.args.get("search", "").strip()
     per_page = 20
-    pagination = Analysis.query.order_by(
+
+    query = Analysis.query
+    if search_query:
+        # Search by filename or ID
+        query = query.filter(
+            (Analysis.filename.ilike(f"%{search_query}%")) |
+            (Analysis.id.ilike(f"%{search_query}%"))
+        )
+
+    pagination = query.order_by(
         Analysis.analyzed_at.desc()
     ).paginate(page=page, per_page=per_page, error_out=False)
+
     return render_template("history.html", pagination=pagination,
+                           search_query=search_query,
                            get_classification_color=get_classification_color)
 
 
