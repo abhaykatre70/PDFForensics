@@ -270,7 +270,7 @@ def get_report_html(analysis_id: str):
     from analyzer.scoring import get_classification_color
     color_class = get_classification_color(analysis.classification)
     return render_template("report.html", report=report, analysis=analysis,
-                           color_class=color_class)
+                           color_class=color_class, client_ip=request.remote_addr)
 
 
 @api_bp.route("/report/<analysis_id>", methods=["DELETE"])

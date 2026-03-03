@@ -46,7 +46,7 @@ def _parse_pdf_date(date_str: str) -> datetime | None:
         return None
 
 
-def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
+def inspect(pdf_path: str, config: dict, password: str = None) -> Dict[str, Any]:
     """
     Run the Metadata Inspector on the given PDF file.
 
@@ -63,6 +63,12 @@ def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
         import pypdf
 
         reader = pypdf.PdfReader(pdf_path, strict=False)
+        if reader.is_encrypted and password:
+            try:
+                reader.decrypt(password)
+            except Exception as e:
+                logger.warning("Failed to decrypt metadata: %s", e)
+
         meta = reader.metadata or {}
 
         # ── Extract standard DocInfo ──────────────────────────────────────────

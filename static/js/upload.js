@@ -61,6 +61,13 @@
             return;
         }
 
+        // Vercel Serverless Functions have a strict 4.5MB payload limit
+        const MAX_FILE_SIZE = 4.4 * 1024 * 1024; // 4.4 MB
+        if (file.size > MAX_FILE_SIZE) {
+            showError(`File is too large (${formatBytes(file.size)}). Maximum allowed size is 4.4 MB.`);
+            return;
+        }
+
         // Populate display
         fileNameEl.textContent = file.name;
         fileSizeEl.textContent = formatBytes(file.size);

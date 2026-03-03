@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ request.args.get('theme', 'dark') }}">
 
 <head>
     <meta charset="UTF-8">
@@ -12,9 +12,36 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <style>
         @media print {
+            @page {
+                margin: 0;
+            }
+
+            html,
+            body {
+                background-color: var(--bg-base) !important;
+                color: var(--text-primary) !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                height: auto !important;
+            }
+
+            .report-page {
+                margin: 0 auto !important;
+                padding: 2cm 2cm 80px 2cm !important;
+                max-width: 100% !important;
+                page-break-after: auto;
+            }
+
             .no-print {
                 display: none !important;
             }
+        }
+
+        html {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
 
         .report-page {
@@ -29,7 +56,7 @@
             gap: 10px;
             margin-bottom: 32px;
             padding-bottom: 16px;
-            border-bottom: 2px solid #1e293b;
+            border-bottom: 2px solid var(--border);
         }
 
         .report-top {
@@ -43,7 +70,7 @@
         .report-file-title {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #f1f5f9;
+            color: var(--text-primary);
             margin-bottom: 4px;
         }
 
@@ -55,16 +82,16 @@
 
         .report-meta-list span {
             font-size: 0.8rem;
-            color: #64748b;
+            color: var(--text-secondary);
             font-family: 'JetBrains Mono', monospace;
         }
 
         .report-score-big {
             text-align: center;
             padding: 20px 32px;
-            background: #0f172a;
+            background: var(--bg-surface);
             border-radius: 16px;
-            border: 1px solid #1e293b;
+            border: 1px solid var(--border);
         }
 
         .rsb-num {
@@ -75,7 +102,7 @@
 
         .rsb-label {
             font-size: 0.75rem;
-            color: #64748b;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -92,10 +119,10 @@
             font-size: 1rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #64748b;
+            color: var(--text-secondary);
             margin-bottom: 16px;
             padding-bottom: 8px;
-            border-bottom: 1px solid #1e293b;
+            border-bottom: 1px solid var(--border);
         }
 
         .report-findings-table {
@@ -104,18 +131,18 @@
         }
 
         .report-findings-table th {
-            background: #0f172a;
+            background: var(--bg-surface);
             padding: 10px 14px;
             text-align: left;
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #64748b;
+            color: var(--text-secondary);
         }
 
         .report-findings-table td {
             padding: 12px 14px;
-            border-bottom: 1px solid #1e293b;
+            border-bottom: 1px solid var(--border);
             font-size: 0.875rem;
             vertical-align: top;
         }
@@ -126,27 +153,27 @@
 
         .rf-module {
             font-size: 0.75rem;
-            color: #94a3b8;
+            color: var(--text-secondary);
             font-weight: 500;
         }
 
         .rf-title {
             font-weight: 600;
-            color: #f1f5f9;
+            color: var(--text-primary);
         }
 
         .rf-detail {
             font-size: 0.8rem;
-            color: #94a3b8;
+            color: var(--text-secondary);
             margin-top: 2px;
         }
 
         .rf-evidence {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.7rem;
-            color: #64748b;
+            color: var(--text-muted);
             margin-top: 4px;
-            background: #0f172a;
+            background: var(--bg-surface);
             padding: 4px 8px;
             border-radius: 4px;
             word-break: break-all;
@@ -177,9 +204,9 @@
         .sscard {
             text-align: center;
             padding: 16px 8px;
-            background: #0f172a;
+            background: var(--bg-surface);
             border-radius: 12px;
-            border: 1px solid #1e293b;
+            border: 1px solid var(--border);
         }
 
         .sscard-num {
@@ -189,7 +216,7 @@
 
         .sscard-label {
             font-size: 0.7rem;
-            color: #64748b;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-top: 2px;
@@ -214,8 +241,11 @@
                 </defs>
             </svg>
             <strong style="font-size:1.1rem;">PDF Forensics — Auditable Evidence Report</strong>
-            <span style="margin-left:auto;font-size:0.75rem;color:#64748b;">Generated {{
-                report.analyzed_at[:19]|replace('T',' ') if report.analyzed_at else 'N/A' }} UTC</span>
+            <span
+                style="margin-left:auto;text-align:right;font-size:0.75rem;color:var(--text-secondary);line-height:1.4;">
+                IP: {{ client_ip }}<br>
+                Generated {{ report.analyzed_at[:19]|replace('T',' ') if report.analyzed_at else 'N/A' }} UTC
+            </span>
         </div>
 
         <!-- File + Score -->
@@ -273,7 +303,7 @@
                         <td><span class="sev-badge sev-badge--{{ f.severity | lower }}">{{ f.severity }}</span></td>
                         <td><span class="rf-module">{{ f.module }}</span></td>
                         <td>
-                            <div class="header-title">A PDF Document Authenticity and Tampering Detection Tool</div>
+                            <div class="rf-title">{{ f.title }}</div>
                             <div class="rf-detail">{{ f.detail }}</div>
                             {% if f.evidence %}<div class="rf-evidence">{{ f.evidence }}</div>{% endif %}
                         </td>
@@ -282,19 +312,29 @@
                 </tbody>
             </table>
             {% else %}
-            <p style="color:#64748b">No findings detected.</p>
+            <p style="color:var(--text-secondary)">No findings detected.</p>
             {% endif %}
         </div>
 
         <!-- Disclaimer -->
-        <p style="font-size:0.75rem;color:#475569;border-top:1px solid #1e293b;padding-top:16px;margin-top:40px;">
+        <p
+            style="font-size:0.75rem;color:var(--text-muted);border-top:1px solid var(--border);padding-top:16px;margin-top:40px;">
             ⚠️ This report is for decision-support purposes only. It does not constitute a legally binding certification
             or authentication of the document's contents. Analysis is based on automated forensic heuristics and may
             produce false positives or miss novel tampering techniques.
         </p>
     </div>
 
-    <button class="print-btn no-print" onclick="window.print()">🖨️ Print / Save PDF</button>
+    <div class="print-controls no-print"
+        style="position: fixed; bottom: 24px; right: 24px; display: flex; gap: 12px; align-items: center;">
+        <select id="theme-selector"
+            onchange="document.documentElement.setAttribute('data-theme', this.value); document.body.setAttribute('data-theme', this.value);"
+            style="padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-primary); font-family: inherit; font-size: 0.9rem; outline: none; cursor: pointer;">
+            <option value="dark" {% if request.args.get('theme')!='light' %}selected{% endif %}>Dark Theme</option>
+            <option value="light" {% if request.args.get('theme')=='light' %}selected{% endif %}>Light Theme</option>
+        </select>
+        <button class="print-btn" onclick="window.print()" style="position: static;">🖨️ Print / Save PDF</button>
+    </div>
 </body>
 
 </html>

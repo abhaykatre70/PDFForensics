@@ -18,7 +18,7 @@ ELA_DIFF_THRESHOLD = 50
 UNIFORM_STDDEV_THRESHOLD = 0.5
 
 
-def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
+def inspect(pdf_path: str, config: dict, password: str = None) -> Dict[str, Any]:
     """
     Run the Visual Forensics Engine on the given PDF file.
 
@@ -42,8 +42,8 @@ def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
     tmp_dir = tempfile.mkdtemp(prefix="pdf_visual_")
     try:
         _analyze_raw_bytes(pdf_path, findings, module_data)
-        _check_page_dimensions(pdf_path, findings, module_data)
-        _run_visual_rasterization(pdf_path, tmp_dir, findings, module_data, config)
+        _check_page_dimensions(pdf_path, findings, module_data, password)
+        _run_visual_rasterization(pdf_path, tmp_dir, findings, module_data, config, password)
     except Exception as exc:
         logger.warning("Visual forensics error: %s", exc, exc_info=True)
         findings.append(_finding(
@@ -95,11 +95,16 @@ def _analyze_raw_bytes(pdf_path: str, findings: List, module_data: Dict):
     module_data["image_formats"] = formats
 
 
-def _check_page_dimensions(pdf_path: str, findings: List, module_data: Dict):
+def _check_page_dimensions(pdf_path: str, findings: List, module_data: Dict, password: str = None):
     """Check for abnormally small page dimensions."""
     try:
         import pypdf
         reader = pypdf.PdfReader(pdf_path, strict=False)
+        if reader.is_encrypted and password:
+            try:
+                reader.decrypt(password)
+            except Exception as e:
+                logger.warning("Failed to decrypt for dimensions check: %s", e)
         anomalies = []
         for i, page in enumerate(reader.pages, start=1):
             mb = page.mediabox
@@ -118,7 +123,7 @@ def _check_page_dimensions(pdf_path: str, findings: List, module_data: Dict):
         logger.debug("Dimension check error: %s", e)
 
 
-def _run_visual_rasterization(pdf_path: str, tmp_dir: str, findings: List, module_data: Dict, config: dict):
+def _run_visual_rasterization(pdf_path: str, tmp_dir: str, findings: List, module_data: Dict, config: dict, password: str = None):
     """
     Rasterize up to MAX_PAGES_VISUAL pages and run pixel-level forensics.
     (pdf2image / Poppler required)
@@ -139,6 +144,8 @@ def _run_visual_rasterization(pdf_path: str, tmp_dir: str, findings: List, modul
         )
         if poppler_path:
             convert_kwargs["poppler_path"] = poppler_path
+        if password:
+            convert_kwargs["userpw"] = password
 
         pages = convert_from_path(**convert_kwargs)
         module_data["pages_analyzed"] = len(pages)

@@ -11,7 +11,7 @@ from typing import List, Dict, Any
 logger = logging.getLogger(__name__)
 
 
-def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
+def inspect(pdf_path: str, config: dict, password: str = None) -> Dict[str, Any]:
     """
     Run the Content Stream Parser on the given PDF file.
 
@@ -35,6 +35,12 @@ def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
         import pypdf
 
         reader = pypdf.PdfReader(pdf_path, strict=False)
+        if reader.is_encrypted and password:
+            try:
+                reader.decrypt(password)
+            except Exception as e:
+                logger.warning("Failed to decrypt content module: %s", e)
+
         all_fonts: set = set()
         total_images = 0
         invisible_text_pages = []
@@ -109,7 +115,7 @@ def inspect(pdf_path: str, config: dict) -> Dict[str, Any]:
             ))
 
         # ── AcroForm field validation ─────────────────────────────────────────
-        _validate_acroform_fields(pdf_path, findings, module_data)
+        _validate_acroform_fields(pdf_path, findings, module_data, password)
 
         # ── Raw stream analysis with regex ────────────────────────────────────
         _analyze_raw_streams(pdf_path, findings, module_data)
@@ -166,12 +172,12 @@ def _analyze_content_stream(page, page_num: int, invisible_pages: List, complex_
         logger.debug("Content stream parse error on page %d: %s", page_num, e)
 
 
-def _validate_acroform_fields(pdf_path: str, findings: List, module_data: Dict):
+def _validate_acroform_fields(pdf_path: str, findings: List, module_data: Dict, password: str = None):
     """Check AcroForm field values for type-inconsistent injection."""
     injection_count = 0
     try:
         import pikepdf
-        pdf = pikepdf.open(pdf_path, suppress_warnings=True)
+        pdf = pikepdf.open(pdf_path, suppress_warnings=True, password=password or "")
         root = pdf.Root
         if "/AcroForm" not in root:
             return

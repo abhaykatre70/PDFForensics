@@ -28,22 +28,22 @@ endblock %}
             </p>
         </div>
         <div class="result-actions">
-            <a href="{{ url_for('api.get_report_html', analysis_id=report.analysis_id) }}" class="btn btn--outline"
-                target="_blank">
+            <button onclick="printReport(`{{ url_for('api.get_report_html', analysis_id=report.analysis_id) }}`)"
+                class="btn btn--outline">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                 </svg>
                 Printable Report
-            </a>
+            </button>
             <a href="{{ url_for('api.get_report', analysis_id=report.analysis_id) }}" class="btn btn--outline"
-                target="_blank">
+                download="report-{{ report.analysis_id }}.json">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                JSON Report
+                Download JSON
             </a>
         </div>
     </div>
@@ -84,7 +84,8 @@ endblock %}
                 <div class="fi-row"><span>File</span><span>{{ report.filename }}</span></div>
                 {% if report.filesize %}<div class="fi-row"><span>Size</span><span>{{ "%.1f"|format(report.filesize /
                         1024) }} KB</span></div>{% endif %}
-                {% if report.sha256 %}<div class="fi-row"><span>SHA-256</span><span class="mono-sm">{{
+                {% if report.sha256 %}<div class="fi-row"><span>SHA-256</span><span class="mono-sm"
+                        id="current-sha-val-header">{{
                         report.sha256[:16] }}…</span></div>{% endif %}
             </div>
         </div>
@@ -282,6 +283,26 @@ endblock %}
 
 {% block scripts %}
 <script>
+    function printReport(url) {
+        const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const finalUrl = url + (url.includes('?') ? '&' : '?') + 'theme=' + theme;
+
+        let printFrame = document.getElementById('print-frame');
+        if (!printFrame) {
+            printFrame = document.createElement('iframe');
+            printFrame.id = 'print-frame';
+            printFrame.style.display = 'none';
+            document.body.appendChild(printFrame);
+        }
+        printFrame.onload = function () {
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            }, 250);
+        };
+        printFrame.src = finalUrl;
+    }
+
     function toggleFinding(header) {
         const card = header.closest('.finding-card');
         card.classList.toggle('open');
@@ -380,18 +401,40 @@ endblock %}
     }
 
     function copyHash() {
-        const hash = document.getElementById('current-sha-val').textContent;
-        navigator.clipboard.writeText(hash).then(() => {
-            const btn = document.querySelector('.btn-copy');
-            const original = btn.innerHTML;
-            btn.innerHTML = `
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span style="color: #10b981">Copied!</span>
-            `;
-            setTimeout(() => btn.innerHTML = original, 2000);
-        });
+        const hashEl = document.getElementById('current-sha-val');
+        if (!hashEl) return;
+        const hash = hashEl.textContent.trim();
+        const btn = document.querySelector('.btn-copy');
+        const original = btn.innerHTML;
+        const successHtml = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span style="color: #10b981">Copied!</span>
+        `;
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(hash).then(() => {
+                btn.innerHTML = successHtml;
+                setTimeout(() => btn.innerHTML = original, 2000);
+            });
+        } else {
+            // Fallback for non-HTTPS connections
+            let textArea = document.createElement("textarea");
+            textArea.value = hash;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                btn.innerHTML = successHtml;
+                setTimeout(() => btn.innerHTML = original, 2000);
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        }
     }
 </script>
 {% endblock %}
