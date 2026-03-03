@@ -61,11 +61,12 @@
             return;
         }
 
-        // Client-side size guard (Vercel serverless cap ~4.5 MB on free plan;
-        // local / Docker deployments support up to MAX_UPLOAD_MB in config)
-        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+        // Vercel serverless has a hard ~4.5 MB payload limit.
+        // We cap at 4.4 MB to show a friendly message instead of Vercel's 413 error.
+        // For larger files (up to 100 MB), run the app locally or via Docker.
+        const MAX_FILE_SIZE = 4.4 * 1024 * 1024; // 4.4 MB (Vercel safe limit)
         if (file.size > MAX_FILE_SIZE) {
-            showError(`File is too large (${formatBytes(file.size)}). Maximum allowed size is 100 MB.`);
+            showError(`File is too large (${formatBytes(file.size)}). Maximum allowed size on Vercel is 4.4 MB. For larger files, run the app locally.`);
             return;
         }
 
