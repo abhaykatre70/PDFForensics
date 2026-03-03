@@ -5,6 +5,10 @@ import os
 import logging
 from flask import Flask
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+# Load .env as early as possible. Force override so .env values take precedence.
+load_dotenv(override=True)
 
 from config import config_map
 from extensions import db, limiter

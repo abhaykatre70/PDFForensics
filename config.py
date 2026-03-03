@@ -4,12 +4,20 @@ config.py — Flask configuration classes for PDF Forensics Tool.
 import os
 import secrets
 
+from dotenv import load_dotenv
+load_dotenv()  # Load .env into os.environ (no-op if file is absent)
+
 
 class BaseConfig:
     """Base configuration shared by all environments."""
     SECRET_KEY = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
-    MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", 100))
+    # ── Upload size ────────────────────────────────────────────────────────────
+    MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", 500))   # default 500 MB
     MAX_CONTENT_LENGTH = MAX_UPLOAD_MB * 1024 * 1024  # bytes
+
+    # ── Supabase ──────────────────────────────────────────────────────────────
+    SUPABASE_URL      = os.environ.get("SUPABASE_URL", "")
+    SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
 
     UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", os.path.join("/tmp", "pdf_uploads"))
     

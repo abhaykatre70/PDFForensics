@@ -340,3 +340,75 @@ def clear_history():
         db.session.rollback()
         logger.error("Failed to clear history: %s", e)
         return jsonify({"error": "Failed to clear history", "detail": str(e)}), 500
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Supabase · Users endpoints
+# ══════════════════════════════════════════════════════════════════════════════
+
+@api_bp.route("/users", methods=["GET"])
+def get_users():
+    """
+    GET /api/v1/users
+    Fetch all users from the Supabase ``users`` table.
+
+    Response 200:
+        { "users": [ { id, name, email, created_at }, … ] }
+    Response 503:
+        { "error": "<message>" }        – Supabase unavailable / misconfigured
+    """
+    try:
+        from supabase_client import fetch_all_users
+        users = fetch_all_users()
+        return jsonify({"users": users, "count": len(users)}), 200
+    except RuntimeError as exc:
+        logger.error("GET /users Supabase error: %s", exc)
+        return jsonify({"error": str(exc)}), 503
+    except Exception as exc:
+        logger.error("GET /users unexpected error: %s", exc, exc_info=True)
+        return jsonify({"error": "Unexpected server error", "detail": str(exc)}), 500
+
+
+@api_bp.route("/users", methods=["POST"])
+def create_user():
+    """
+    POST /api/v1/users
+    Insert a new user into the Supabase ``users`` table.
+
+    Request body (JSON):
+        { "name": "Alice Smith", "email": "alice@example.com" }
+
+    Response 201:
+        { "user": { id, name, email, created_at } }
+    Response 400:
+        { "error": "<validation message>" }     – missing / blank fields
+    Response 409:
+        { "error": "<message>" }                – duplicate e-mail
+    Response 503:
+        { "error": "<message>" }                – Supabase unavailable
+    """
+    body = request.get_json(silent=True) or {}
+    name  = body.get("name", "").strip()
+    email = body.get("email", "").strip()
+
+    if not name:
+        return jsonify({"error": "name is required and must not be empty."}), 400
+    if not email:
+        return jsonify({"error": "email is required and must not be empty."}), 400
+
+    try:
+        from supabase_client import insert_user
+        user = insert_user(name, email)
+        return jsonify({"user": user}), 201
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except RuntimeError as exc:
+        err_str = str(exc).lower()
+        # Supabase / Postgres surfaces duplicate-key as a 23505 unique violation
+        if "duplicate" in err_str or "unique" in err_str or "23505" in err_str:
+            return jsonify({"error": f"A user with that e-mail already exists. ({exc})"}), 409
+        logger.error("POST /users Supabase error: %s", exc)
+        return jsonify({"error": str(exc)}), 503
+    except Exception as exc:
+        logger.error("POST /users unexpected error: %s", exc, exc_info=True)
+        return jsonify({"error": "Unexpected server error", "detail": str(exc)}), 500
