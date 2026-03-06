@@ -3,9 +3,19 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero">
+<section class="hero" style="position: relative;">
+    <!-- Layer 1: Background Theme Gradients -->
     <div class="hero-bg"></div>
-    <div class="hero-content">
+
+    <!-- Layer 2: Interactive Dot Mesh -->
+    <div class="hero-canvas-wrap"
+        style="position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;">
+        <canvas id="dotGridCanvas"
+            style="display: block; width: 100%; height: 100%; pointer-events: auto; opacity: 0.8;"></canvas>
+    </div>
+
+    <!-- Layer 3: Main Content -->
+    <div class="hero-content" style="position: relative; z-index: 1;">
         <div class="hero-badge">
             <span class="badge-dot"></span>
             Multi-Layer Forensic Analysis
@@ -39,7 +49,8 @@
                         <span>or <button type="button" class="link-btn"
                                 onclick="document.getElementById('file-input').click()">browse files</button></span>
                     </div>
-                    <p class="drop-hint">PDF files up to 1024 MB • Supports password-protected PDFs</p>
+                    <p class="drop-hint">PDF files up to {{ config.MAX_UPLOAD_MB }} MB • Supports password-protected
+                        PDFs</p>
                     <div class="drop-file-info" id="drop-file-info" style="display:none">
                         <div class="file-icon">📄</div>
                         <div class="file-details">
@@ -203,4 +214,36 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dotgrid.js') }}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const rootStyles = getComputedStyle(document.documentElement);
+        // Using values based on the user's theme matching the component snippet
+        const baseColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#EAEAF2' : '#271E37';
+        const activeColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#A29DB8' : '#cdc9de';
+
+        let grid = new DotGrid('dotGridCanvas', {
+            dotSize: 6,
+            gap: 28,
+            baseColor: baseColor,
+            activeColor: activeColor,
+            proximity: 140,
+            shockRadius: 300,
+            shockStrength: 6,
+            resistance: 800,
+            returnDuration: 1.2
+        });
+
+        // Optional: Update colors on theme toggle logic if it exists
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                setTimeout(() => {
+                    grid.config.baseColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#EAEAF2' : '#271E37';
+                    grid.config.activeColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#A29DB8' : '#cdc9de';
+                }, 50); // Little buffer for theme to swap
+            });
+        }
+    });
+</script>
 {% endblock %}

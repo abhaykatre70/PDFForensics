@@ -55,19 +55,35 @@
     });
 
     function setFile(file) {
+        const maxMB = window.APP_MAX_UPLOAD_MB || 1024;
+        const maxBytes = maxMB * 1024 * 1024;
+
+        // Validate file extension / MIME type first
         if (!file.name.toLowerCase().endsWith(".pdf") &&
             file.type !== "application/pdf") {
             showError("Only PDF files are accepted.");
             return;
         }
 
-        // Vercel serverless has a hard ~4.5 MB payload limit.
-        // We cap at 4.4 MB to show a friendly message instead of Vercel's 413 error.
-        // For larger files (up to 100 MB), run the app locally or via Docker.
-        const MAX_FILE_SIZE = 4.4 * 1024 * 1024; // 4.4 MB (Vercel safe limit)
-        if (file.size > MAX_FILE_SIZE) {
-            showError(`File is too large (${formatBytes(file.size)}). Maximum allowed size on Vercel is 4.4 MB. For larger files, run the app locally.`);
-            return;
+        // On Vercel (serverless), the hard payload limit is ~4.5 MB.
+        // Show a friendly warning instead of letting the server return a raw 413.
+        // When running locally or via Docker, allow up to the server-configured maximum.
+        if (window.APP_ON_VERCEL) {
+            const VERCEL_MAX = 4.4 * 1024 * 1024; // 4.4 MB safe Vercel limit
+            if (file.size > VERCEL_MAX) {
+                showError(
+                    `File is too large (${formatBytes(file.size)}) for Vercel deployment. ` +
+                    `Max allowed on Vercel is 4.4 MB. ` +
+                    `Run the app locally or via Docker to analyse larger files.`
+                );
+                return;
+            }
+        } else {
+            // Local / Docker: respect the server-configured MAX_UPLOAD_MB
+            if (file.size > maxBytes) {
+                showError(`File is too large (${formatBytes(file.size)}). Maximum allowed is ${maxMB} MB.`);
+                return;
+            }
         }
 
         // Populate display

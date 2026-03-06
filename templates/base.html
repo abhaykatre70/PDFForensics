@@ -15,6 +15,9 @@
     <script>
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
+        window.APP_MAX_UPLOAD_MB = parseInt("{{ config.MAX_UPLOAD_MB or 16 }}", 10) || 16;
+        // True only when deployed on Vercel (serverless) — used by upload.js size guard
+        window.APP_ON_VERCEL = ("{{ config.get('VERCEL', '') }}" === "1");
     </script>
     {% block head %}{% endblock %}
 </head>
@@ -112,12 +115,28 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-inner">
-            <span>A PDF Document Authenticity and Tampering Detection Tool v1.0 — Decision-support only. Not a legal
-                certification.</span>
-            <span class="footer-sep">|</span>
-            <a href="{{ url_for('api.health') }}" class="footer-link">Health Check</a>
+    <footer class="footer-ultra-slim">
+        <div class="footer-slim-container">
+            <div class="footer-main-row">
+                <div class="footer-segment">
+                    <span class="badge-pill outline-pill">Group ID: A2</span>
+                    <span class="badge-pill">Team Project</span>
+                </div>
+                <div class="footer-divider-dot"></div>
+                <div class="footer-segment">
+                    <span class="topic-text">A PDF Document Authenticity & Tampering Detection Tool (Project ID:
+                        T063)</span>
+                </div>
+                <div class="footer-divider-dot"></div>
+                <div class="footer-segment">
+                    <span class="segment-label">Developed by:</span>
+                    <span class="author-name">Karan R. Prajapati & Abhay S. Katre</span>
+                </div>
+            </div>
+
+            <div class="footer-bottom-mini" style="justify-content: center;">
+                <span>© 2026 PDF Forensics. Section A • Group 2</span>
+            </div>
         </div>
     </footer>
 

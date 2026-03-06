@@ -3,7 +3,7 @@ app.py — Flask Application Factory for PDF Forensics Tool.
 """
 import os
 import logging
-from flask import Flask
+from flask import Flask, request, jsonify, flash, redirect, url_for
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -57,6 +57,19 @@ def create_app(env: str = None) -> Flask:
     db.init_app(app)
     CORS(app, origins="same-origin")
     limiter.init_app(app)
+
+    # ── 413 handler — file too large ─────────────────────────────────────────
+    from werkzeug.exceptions import RequestEntityTooLarge
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_413(e):
+        max_mb = app.config.get("MAX_UPLOAD_MB", 500)
+        msg = f"File too large. Maximum allowed upload size is {max_mb} MB."
+        # API clients get JSON; browser clients get a flash redirect
+        if request.path.startswith("/api/"):
+            return jsonify({"error": msg}), 413
+        flash(msg, "error")
+        return redirect(url_for("ui.index")), 413
 
     # ── Blueprints ────────────────────────────────────────────────────────────
     from blueprints.api import api_bp
